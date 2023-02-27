@@ -4,12 +4,14 @@ defmodule EctoMultiRepo do
   """
 
   alias EctoMultiRepo.ProxyRepo.{
-    Postgres
+    Postgres,
+    MySQL,
+    MSSQL
   }
 
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
     repo_module =
-      _opts
+      opts
       |> Keyword.get(:database_type)
       |> choose_repo_module()
 
@@ -22,18 +24,28 @@ defmodule EctoMultiRepo do
 
       use Behaviour
 
-      defdelegate start_repo(
-                    id \\ UUID.uuid1(),
-                    hostname,
-                    port,
-                    database,
-                    username,
-                    password,
-                    pool_size \\ 3,
-                    timeout \\ :timer.minutes(10)
-                  ),
-                  to: ProxySupervisor,
-                  as: :start_proxy
+      def start_repo(
+            id \\ UUID.uuid1(),
+            hostname,
+            port,
+            database,
+            username,
+            password,
+            pool_size \\ 3,
+            timeout \\ :timer.minutes(10)
+          ) do
+        ProxySupervisor.start_proxy(
+          id,
+          hostname,
+          port,
+          database,
+          username,
+          password,
+          pool_size,
+          timeout,
+          unquote(repo_module)
+        )
+      end
 
       @impl Behaviour
       defdelegate noop(id), to: Proxy
@@ -101,7 +113,21 @@ defmodule EctoMultiRepo do
     Postgres
   end
 
+  defp choose_repo_module(:mysql) do
+    MySQL
+  end
+
+  defp choose_repo_module(:mssql) do
+    MSSQL
+  end
+
   defp choose_repo_module(other) do
-    raise "Invalid option :database_type at use: #{__MODULE__}, #{inspect(other)}"
+    raise """
+    Invalid option :database_type at use: #{__MODULE__}, #{inspect(other)}
+    valid options are:
+      - :postgres
+      - :mysql
+      - :mssql
+    """
   end
 end

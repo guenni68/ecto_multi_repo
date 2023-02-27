@@ -30,7 +30,9 @@ defmodule EctoMultiRepo.MixProject do
       {:ecto_sql, "~> 3.9"},
       {:uuid, "~> 1.1"},
       {:gen_state_machine, "~> 3.0"},
-      {:postgrex, "~> 0.16.5", only: [:dev, :test]}
+      {:postgrex, "~> 0.16.5"},
+      {:myxql, "~> 0.6.3"},
+      {:tds, "~> 2.3"}
     ]
   end
 end

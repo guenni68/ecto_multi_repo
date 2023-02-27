@@ -20,7 +20,8 @@ defmodule EctoMultiRepo.ProxySupervisor do
         username,
         password,
         pool_size,
-        timeout
+        timeout,
+        repo_module
       ) do
     args = %{
       id: id,
@@ -30,7 +31,8 @@ defmodule EctoMultiRepo.ProxySupervisor do
       username: username,
       password: password,
       pool_size: pool_size,
-      timeout: timeout
+      timeout: timeout,
+      repo_module: repo_module
     }
 
     case DynamicSupervisor.start_child(__MODULE__, {EctoMultiRepo.Proxy, args}) do

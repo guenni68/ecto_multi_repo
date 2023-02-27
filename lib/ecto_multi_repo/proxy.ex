@@ -101,11 +101,11 @@ defmodule EctoMultiRepo.Proxy do
     GenStateMachine.call(via_tuple(id), {:query, sql, params, opts})
   end
 
-  @impl GenStateMachine
   defp via_tuple(id) do
     ProcessRegistry.via_tuple({__MODULE__, id})
   end
 
+  @impl GenStateMachine
   def init(%{timeout: timout, repo_module: repo_module} = arg) do
     params =
       arg
@@ -114,8 +114,8 @@ defmodule EctoMultiRepo.Proxy do
       |> Enum.to_list()
 
     watchdog = Watchdog.start_watching(timout)
-    {:ok, repo} = ProxyRepo.start_link(params)
-    ProxyRepo.put_dynamic_repo(repo)
+    {:ok, repo} = repo_module.start_link(params)
+    repo_module.put_dynamic_repo(repo)
 
     {:ok, :running, %{watchdog: watchdog, repo_module: repo_module}}
   end
@@ -263,7 +263,7 @@ defmodule EctoMultiRepo.Proxy do
          }
        ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.query(sql, params, opts)
+    res = repo_module.query(sql, params, opts)
     actions = [{:reply, from, res}]
     {:keep_state_and_data, actions}
   end
