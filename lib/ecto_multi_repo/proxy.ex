@@ -5,7 +5,8 @@ defmodule EctoMultiRepo.Proxy do
 
   alias EctoMultiRepo.{
     WatchDog,
-    ProxyRepo
+    ProxyRepo,
+    ProcessRegistry
   }
 
   def start_link(%{id: id} = arg) do
@@ -16,12 +17,20 @@ defmodule EctoMultiRepo.Proxy do
     GenServer.cast(id, :noop)
   end
 
+  def aggregate(id, queryable, aggregate, opts \\ []) do
+    GenServer.call(via_tuple(id), {:aggregate, queryable, aggregate, opts})
+  end
+
+  def aggregate(id, queryable, aggregate, field, opts) do
+    GenServer.call(via_tuple(id), {:aggregate, queryable, aggregate, field, opts})
+  end
+
   def query(id, sql, params, opts) do
     GenServer.call(via_tuple(id), {:query, sql, params, opts})
   end
 
   defp via_tuple(id) do
-    EctoMultiRepo.ProcessRegistry.via_tuple({__MODULE__, id})
+    ProcessRegistry.via_tuple({__MODULE__, id})
   end
 
   @impl GenServer
@@ -39,12 +48,28 @@ defmodule EctoMultiRepo.Proxy do
     {:ok, watchdog}
   end
 
+  # noop
   @impl GenServer
   def handle_cast(:noop, watchdog) do
     WatchDog.im_alive(watchdog)
     {:noreply, watchdog}
   end
 
+  # aggregate
+  @impl GenServer
+  def handle_call({:aggregate, queryable, aggregate, opts}, _from, watchdog) do
+    WatchDog.im_alive(watchdog)
+    res = ProxyRepo.aggregate(queryable, aggregate, opts)
+    {:reply, res, watchdog}
+  end
+
+  def handle_call({:aggregate, queryable, aggregate, field, opts}, _from, watchdog) do
+    WatchDog.im_alive(watchdog)
+    res = ProxyRepo.aggregate(queryable, aggregate, field, opts)
+    {:reply, res, watchdog}
+  end
+
+  # query
   @impl GenServer
   def handle_call({:query, sql, params, opts}, _from, watchdog) do
     WatchDog.im_alive(watchdog)

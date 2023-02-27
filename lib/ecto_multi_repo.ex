@@ -22,6 +22,10 @@ defmodule EctoMultiRepo do
 
       defdelegate noop(id), to: Proxy
 
+      defdelegate aggregate(id, queryable, aggregate, opts \\ []), to: Proxy
+
+      defdelegate aggregate(id, queryable, aggregate, field, opts), to: Proxy
+
       defdelegate query(
                     id,
                     sql,
