@@ -26,6 +26,10 @@ defmodule EctoMultiRepo do
 
       defdelegate aggregate(id, queryable, aggregate, field, opts), to: Proxy
 
+      defdelegate all(id, queryable, opts \\ []), to: Proxy
+
+      defdelegate checked_out?(id), to: Proxy
+
       defdelegate query(
                     id,
                     sql,

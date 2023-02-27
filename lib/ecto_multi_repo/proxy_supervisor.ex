@@ -1,8 +1,15 @@
 defmodule EctoMultiRepo.ProxySupervisor do
   @moduledoc false
 
-  def start_link() do
-    DynamicSupervisor.start_link(name: __MODULE__, strategy: :one_for_one)
+  use DynamicSupervisor
+
+  def start_link(init_arg) do
+    DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+  end
+
+  @impl DynamicSupervisor
+  def init(_init_arg) do
+    DynamicSupervisor.init(strategy: :one_for_one)
   end
 
   def start_proxy(
@@ -36,13 +43,5 @@ defmodule EctoMultiRepo.ProxySupervisor do
       error ->
         error
     end
-  end
-
-  def child_spec(_) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, []},
-      type: :supervisor
-    }
   end
 end
