@@ -35,6 +35,16 @@ defmodule EctoMultiRepo do
 
       defdelegate config(id), to: Proxy
 
+      defdelegate delete!(id, struct, opts \\ []), to: Proxy
+
+      defdelegate delete(id, struct, opts \\ []), to: Proxy
+
+      defdelegate delete_all(id, queryable, opts \\ []), to: Proxy
+
+      defdelegate default_options(id, operation), to: Proxy
+
+      defdelegate exists?(queryable, opts \\ []), to: Proxy
+
       defdelegate query(
                     id,
                     sql,

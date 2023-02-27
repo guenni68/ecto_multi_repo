@@ -11,6 +11,8 @@ defmodule EctoMultiRepo.Behaviour do
 
   ## Ecto.Adapter
 
+  @callback noop(id :: String.t()) :: any()
+
   @doc """
   Returns the adapter configuration stored in the `:otp_app` environment.
 
