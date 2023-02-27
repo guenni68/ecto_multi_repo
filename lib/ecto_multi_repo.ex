@@ -43,7 +43,11 @@ defmodule EctoMultiRepo do
 
       defdelegate default_options(id, operation), to: Proxy
 
-      defdelegate exists?(queryable, opts \\ []), to: Proxy
+      defdelegate exists?(id, queryable, opts \\ []), to: Proxy
+
+      defdelegate explain(id, operation, queryable, opts \\ []), to: Proxy
+
+      defdelegate get!(conn_ident, queryable, id, opts \\ []), to: Proxy
 
       defdelegate query(
                     id,

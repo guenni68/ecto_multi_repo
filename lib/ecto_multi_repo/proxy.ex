@@ -76,6 +76,16 @@ defmodule EctoMultiRepo.Proxy do
     GenServer.call(via_tuple(id), {:exists?, queryable, opts})
   end
 
+  @impl Behaviour
+  def explain(id, operation, queryable, opts \\ []) do
+    GenServer.call(via_tuple(id), {:explain, operation, queryable, opts})
+  end
+
+  @impl Behaviour
+  def get!(conn_ident, queryable, id, opts \\ []) do
+    GenServer.call(via_tuple(conn_ident), {:get!, queryable, id, opts})
+  end
+
   #  @impl Behaviour
   def query(id, sql, params, opts) do
     GenServer.call(via_tuple(id), {:query, sql, params, opts})
@@ -191,6 +201,22 @@ defmodule EctoMultiRepo.Proxy do
   def handle_call({:exists?, queryable, opts}, _from, watchdog) do
     WatchDog.im_alive(watchdog)
     res = ProxyRepo.exists?(queryable, opts)
+    {:reply, res, watchdog}
+  end
+
+  # explain
+  @impl GenServer
+  def handle_call({:explain, operation, queryable, opts}, _from, watchdog) do
+    WatchDog.im_alive(watchdog)
+    res = ProxyRepo.explain(operation, queryable, opts)
+    {:reply, res, watchdog}
+  end
+
+  # get!
+  @impl GenServer
+  def handle_call({:get!, queryable, id, opts}, _from, watchdog) do
+    WatchDog.im_alive(watchdog)
+    res = ProxyRepo.get!(queryable, id, opts)
     {:reply, res, watchdog}
   end
 

@@ -1496,4 +1496,11 @@ defmodule EctoMultiRepo.Behaviour do
               id :: String.t(),
               value :: any
             ) :: no_return
+
+  @callback explain(
+              id :: String.t(),
+              :all | :update_all | :delete_all,
+              Ecto.Queryable.t(),
+              opts :: Keyword.t()
+            ) :: String.t() | Exception.t()
 end
