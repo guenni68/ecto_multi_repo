@@ -7,6 +7,29 @@ defmodule EctoMultiRepo.Behaviour do
     end
   end
 
+  @optional_callbacks [
+    reload: 3,
+    reload!: 3,
+    update: 3,
+    update!: 3,
+    load: 3,
+    one: 3,
+    one!: 3,
+    preload: 4,
+    prepare_query: 4,
+    rollback: 2,
+    stream: 3,
+    transaction: 3,
+    update_all: 4,
+    get_by!: 4,
+    in_transaction?: 1,
+    insert: 3,
+    insert!: 3,
+    insert_all: 4,
+    insert_or_update: 3,
+    insert_or_update!: 3
+  ]
+
   ## User callbacks
 
   ## Ecto.Adapter

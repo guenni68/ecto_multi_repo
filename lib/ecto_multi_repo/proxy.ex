@@ -1,10 +1,10 @@
 defmodule EctoMultiRepo.Proxy do
   @moduledoc false
 
-  use GenServer, restart: :temporary
+  use GenStateMachine, restart: :temporary
 
   alias EctoMultiRepo.{
-    WatchDog,
+    Watchdog,
     ProxyRepo,
     ProcessRegistry,
     Behaviour
@@ -13,244 +13,258 @@ defmodule EctoMultiRepo.Proxy do
   use Behaviour
 
   def start_link(%{id: id} = arg) do
-    GenServer.start_link(__MODULE__, arg, name: via_tuple(id))
+    GenStateMachine.start_link(__MODULE__, arg, name: via_tuple(id))
   end
 
   @impl Behaviour
   def noop(id) do
-    GenServer.cast(id, :noop)
+    GenStateMachine.cast(id, :noop)
   end
 
   @impl Behaviour
   def aggregate(id, queryable, aggregate, opts \\ []) do
-    GenServer.call(via_tuple(id), {:aggregate, queryable, aggregate, opts})
+    GenStateMachine.call(via_tuple(id), {:aggregate, queryable, aggregate, opts})
   end
 
   @impl Behaviour
   def aggregate(id, queryable, aggregate, field, opts) do
-    GenServer.call(via_tuple(id), {:aggregate, queryable, aggregate, field, opts})
+    GenStateMachine.call(via_tuple(id), {:aggregate, queryable, aggregate, field, opts})
   end
 
   @impl Behaviour
   def all(id, queryable, opts) do
-    GenServer.call(via_tuple(id), {:all, queryable, opts})
+    GenStateMachine.call(via_tuple(id), {:all, queryable, opts})
   end
 
   @impl Behaviour
   def checked_out?(id) do
-    GenServer.call(via_tuple(id), :checked_out?)
+    GenStateMachine.call(via_tuple(id), :checked_out?)
   end
 
   @impl Behaviour
   def checkout(id, fun, opts) do
-    GenServer.call(via_tuple(id), {:checkout, fun, opts})
+    GenStateMachine.call(via_tuple(id), {:checkout, fun, opts})
   end
 
   @impl Behaviour
   def config(id) do
-    GenServer.call(via_tuple(id), :config)
+    GenStateMachine.call(via_tuple(id), :config)
   end
 
   @impl Behaviour
   def delete!(id, struct, opts) do
-    GenServer.call(via_tuple(id), {:delete!, struct, opts})
+    GenStateMachine.call(via_tuple(id), {:delete!, struct, opts})
   end
 
   @impl Behaviour
   def delete(id, struct, opts) do
-    GenServer.call(via_tuple(id), {:delete, struct, opts})
+    GenStateMachine.call(via_tuple(id), {:delete, struct, opts})
   end
 
   @impl Behaviour
   def delete_all(id, struct, opts) do
-    GenServer.call(via_tuple(id), {:delete_all, struct, opts})
+    GenStateMachine.call(via_tuple(id), {:delete_all, struct, opts})
   end
 
   @impl Behaviour
   def default_options(id, operation) do
-    GenServer.call(via_tuple(id), {:default_options, operation})
+    GenStateMachine.call(via_tuple(id), {:default_options, operation})
   end
 
   @impl Behaviour
   def exists?(id, queryable, opts \\ []) do
-    GenServer.call(via_tuple(id), {:exists?, queryable, opts})
+    GenStateMachine.call(via_tuple(id), {:exists?, queryable, opts})
   end
 
   @impl Behaviour
   def explain(id, operation, queryable, opts \\ []) do
-    GenServer.call(via_tuple(id), {:explain, operation, queryable, opts})
+    GenStateMachine.call(via_tuple(id), {:explain, operation, queryable, opts})
   end
 
   @impl Behaviour
   def get(conn_ident, queryable, id, opts \\ []) do
-    GenServer.call(via_tuple(conn_ident), {:get, queryable, id, opts})
+    GenStateMachine.call(via_tuple(conn_ident), {:get, queryable, id, opts})
   end
 
   @impl Behaviour
   def get!(conn_ident, queryable, id, opts \\ []) do
-    GenServer.call(via_tuple(conn_ident), {:get!, queryable, id, opts})
+    GenStateMachine.call(via_tuple(conn_ident), {:get!, queryable, id, opts})
   end
 
   @impl Behaviour
   def get_by(id, queryable, clauses, opts) do
-    GenServer.call(via_tuple(id), {:get_by, queryable, clauses, opts})
+    GenStateMachine.call(via_tuple(id), {:get_by, queryable, clauses, opts})
   end
 
   #  @impl Behaviour
   def query(id, sql, params, opts) do
-    GenServer.call(via_tuple(id), {:query, sql, params, opts})
+    GenStateMachine.call(via_tuple(id), {:query, sql, params, opts})
   end
 
+  @impl GenStateMachine
   defp via_tuple(id) do
     ProcessRegistry.via_tuple({__MODULE__, id})
   end
 
-  @impl GenServer
-  def init(%{timeout: timout} = arg) do
+  def init(%{timeout: timout, repo_module: repo_module} = arg) do
     params =
       arg
-      |> Map.drop([:id, :timeout])
+      |> Map.drop([:id, :timeout, :repo_module])
       |> Map.put(:name, nil)
       |> Enum.to_list()
 
-    watchdog = WatchDog.start_watching(timout)
+    watchdog = Watchdog.start_watching(timout)
     {:ok, repo} = ProxyRepo.start_link(params)
     ProxyRepo.put_dynamic_repo(repo)
 
-    {:ok, watchdog}
+    {:ok, :running, %{watchdog: watchdog, repo_module: repo_module}}
   end
 
+  @impl GenStateMachine
+  def handle_event(event_type, payload, :running, data) do
+    running(event_type, payload, data)
+  end
+
+  defp running(event_type, payload, data)
+
   # noop
-  @impl GenServer
-  def handle_cast(:noop, watchdog) do
-    WatchDog.im_alive(watchdog)
-    {:noreply, watchdog}
+  defp running(:cast, :noop, %{watchdog: watchdog}) do
+    Watchdog.im_alive(watchdog)
+    :keep_state_and_data
   end
 
   # aggregate
-  @impl GenServer
-  def handle_call({:aggregate, queryable, aggregate, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
-    res = ProxyRepo.aggregate(queryable, aggregate, opts)
-    {:reply, res, watchdog}
+  defp running(
+         {:call, from},
+         {:aggregate, queryable, aggregate, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
+    Watchdog.im_alive(watchdog)
+    res = repo_module.aggregate(queryable, aggregate, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
-  @impl GenServer
-  def handle_call({:aggregate, queryable, aggregate, field, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
-    res = ProxyRepo.aggregate(queryable, aggregate, field, opts)
-    {:reply, res, watchdog}
+  defp running(
+         {:call, from},
+         {:aggregate, queryable, aggregate, field, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
+    Watchdog.im_alive(watchdog)
+    res = repo_module.aggregate(queryable, aggregate, field, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # all
-  @impl GenServer
   def handle_call({:all, queryable, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.all(queryable, opts)
     {:reply, res, watchdog}
   end
 
   # checked out?
-  @impl GenServer
   def handle_call(:checked_out?, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.checked_out?()
     {:reply, res, watchdog}
   end
 
   # checkout
-  @impl GenServer
   def handle_call({:checkout, fun, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.checkout(fun, opts)
     {:reply, res, watchdog}
   end
 
   # config
-  @impl GenServer
   def handle_call(:config, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.config()
     {:reply, res, watchdog}
   end
 
   # delete!
-  @impl GenServer
   def handle_call({:delete!, struct, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.delete!(struct, opts)
     {:reply, res, watchdog}
   end
 
   # delete
-  @impl GenServer
   def handle_call({:delete, struct, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.delete(struct, opts)
     {:reply, res, watchdog}
   end
 
   # delete
-  @impl GenServer
   def handle_call({:delete_all, struct, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.delete_all(struct, opts)
     {:reply, res, watchdog}
   end
 
   # default_options
-  @impl GenServer
   def handle_call({:default_options, operation}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.default_options(operation)
     {:reply, res, watchdog}
   end
 
   # exists?
-  @impl GenServer
   def handle_call({:exists?, queryable, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.exists?(queryable, opts)
     {:reply, res, watchdog}
   end
 
   # explain
-  @impl GenServer
   def handle_call({:explain, operation, queryable, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.explain(operation, queryable, opts)
     {:reply, res, watchdog}
   end
 
   # get
-  @impl GenServer
   def handle_call({:get, queryable, id, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.get(queryable, id, opts)
     {:reply, res, watchdog}
   end
 
   # get!
-  @impl GenServer
   def handle_call({:get!, queryable, id, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.get!(queryable, id, opts)
     {:reply, res, watchdog}
   end
 
   # get_by
-  @impl GenServer
   def handle_call({:get_by, queryable, clauses, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.get_by(queryable, clauses, opts)
     {:reply, res, watchdog}
   end
 
   # query
-  @impl GenServer
-  def handle_call({:query, sql, params, opts}, _from, watchdog) do
-    WatchDog.im_alive(watchdog)
+  defp running(
+         {:call, from},
+         {:query, sql, params, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
+    Watchdog.im_alive(watchdog)
     res = ProxyRepo.query(sql, params, opts)
-    {:reply, res, watchdog}
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 end

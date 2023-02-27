@@ -1,4 +1,4 @@
-defmodule EctoMultiRepo.WatchDog do
+defmodule EctoMultiRepo.Watchdog do
   @moduledoc false
 
   def start_watching(timeout) do
