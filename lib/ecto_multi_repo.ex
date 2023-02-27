@@ -5,6 +5,7 @@ defmodule EctoMultiRepo do
 
   defmacro __using__(_opts) do
     quote do
+      use EctoMultiRepo.Behaviour
       alias EctoMultiRepo.{ProxySupervisor, Proxy}
 
       defdelegate start_repo(
