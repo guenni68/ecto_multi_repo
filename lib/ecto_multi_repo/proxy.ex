@@ -12,6 +12,10 @@ defmodule EctoMultiRepo.Proxy do
     GenServer.start_link(__MODULE__, arg, name: via_tuple(id))
   end
 
+  def noop(id) do
+    GenServer.cast(id, :noop)
+  end
+
   def query(id, sql, params, opts) do
     GenServer.call(via_tuple(id), {:query, sql, params, opts})
   end
@@ -20,6 +24,7 @@ defmodule EctoMultiRepo.Proxy do
     EctoMultiRepo.ProcessRegistry.via_tuple({__MODULE__, id})
   end
 
+  @impl GenServer
   def init(%{timeout: timout} = arg) do
     params =
       arg
@@ -34,6 +39,13 @@ defmodule EctoMultiRepo.Proxy do
     {:ok, watchdog}
   end
 
+  @impl GenServer
+  def handle_cast(:noop, watchdog) do
+    WatchDog.im_alive(watchdog)
+    {:noreply, watchdog}
+  end
+
+  @impl GenServer
   def handle_call({:query, sql, params, opts}, _from, watchdog) do
     WatchDog.im_alive(watchdog)
     res = ProxyRepo.query(sql, params, opts)
