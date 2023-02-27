@@ -1,7 +1,7 @@
 defmodule EctoMultiRepo.Proxy do
   @moduledoc false
 
-  use GenServer, restart: :transient
+  use GenServer, restart: :temporary
 
   alias EctoMultiRepo.{
     WatchDog,
@@ -10,6 +10,10 @@ defmodule EctoMultiRepo.Proxy do
 
   def start_link(%{id: id} = arg) do
     GenServer.start_link(__MODULE__, arg, name: via_tuple(id))
+  end
+
+  def query(id, sql, params, opts) do
+    GenServer.call(via_tuple(id), {:query, sql, params, opts})
   end
 
   defp via_tuple(id) do
@@ -30,13 +34,9 @@ defmodule EctoMultiRepo.Proxy do
     {:ok, watchdog}
   end
 
-  def execute(id, command) do
-    GenServer.call(via_tuple(id), {:execute, command})
-  end
-
-  def handle_call({:execute, command}, _from, watchdog) do
+  def handle_call({:query, sql, params, opts}, _from, watchdog) do
     WatchDog.im_alive(watchdog)
-    res = ProxyRepo.query(command)
+    res = ProxyRepo.query(sql, params, opts)
     {:reply, res, watchdog}
   end
 end

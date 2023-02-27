@@ -5,7 +5,7 @@ defmodule EctoMultiRepo do
 
   defmacro __using__(_opts) do
     quote do
-      alias EctoMultiRepo.ProxySupervisor
+      alias EctoMultiRepo.{ProxySupervisor, Proxy}
 
       defdelegate start_repo(
                     id \\ UUID.uuid1(),
@@ -19,6 +19,8 @@ defmodule EctoMultiRepo do
                   ),
                   to: ProxySupervisor,
                   as: :start_proxy
+
+      defdelegate query(id, sql, params \\ [], opts \\ []), to: Proxy
     end
   end
 end

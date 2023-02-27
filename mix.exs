@@ -23,12 +23,13 @@ defmodule EctoMultiRepo.MixProject do
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:ecto_sql, "~> 3.9"},
       {:uuid, "~> 1.1"},
-      {:postgrex, "~> 0.16.5", only: :dev}
+      {:postgrex, "~> 0.16.5", only: [:dev, :test]}
     ]
   end
 end

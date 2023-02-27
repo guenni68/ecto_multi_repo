@@ -26,9 +26,16 @@ defmodule EctoMultiRepo.ProxySupervisor do
       timeout: timeout
     }
 
-    DynamicSupervisor.start_child(__MODULE__, {EctoMultiRepo.Proxy, args})
+    case DynamicSupervisor.start_child(__MODULE__, {EctoMultiRepo.Proxy, args}) do
+      {:ok, _pid} ->
+        {:ok, id}
 
-    id
+      {:error, {:already_started, _pid}} ->
+        {:ok, id}
+
+      error ->
+        error
+    end
   end
 
   def child_spec(_) do
