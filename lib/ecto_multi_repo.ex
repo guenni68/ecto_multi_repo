@@ -3,7 +3,16 @@ defmodule EctoMultiRepo do
   Documentation for `EctoMultiRepo`.
   """
 
+  alias EctoMultiRepo.ProxyRepo.{
+    Postgres
+  }
+
   defmacro __using__(_opts) do
+    repo_module =
+      _opts
+      |> Keyword.get(:database_type)
+      |> choose_repo_module()
+
     quote do
       alias EctoMultiRepo.{
         ProxySupervisor,
@@ -82,5 +91,17 @@ defmodule EctoMultiRepo do
                   ),
                   to: Proxy
     end
+  end
+
+  defp choose_repo_module(nil) do
+    raise "Missing option :database_type at use: #{__MODULE__}"
+  end
+
+  defp choose_repo_module(:postgres) do
+    Postgres
+  end
+
+  defp choose_repo_module(other) do
+    raise "Invalid option :database_type at use: #{__MODULE__}, #{inspect(other)}"
   end
 end

@@ -1,5 +1,5 @@
 defmodule TestRepo do
   @moduledoc false
 
-  use EctoMultiRepo
+  use EctoMultiRepo, database_type: :postgres
 end
