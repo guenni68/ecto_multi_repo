@@ -30,7 +30,15 @@ defmodule EctoMultiRepo.Proxy do
   end
 
   def checked_out?(id) do
-    GenServer.call(id, :checked_out?)
+    GenServer.call(via_tuple(id), :checked_out?)
+  end
+
+  def checkout(id, fun, opts) do
+    GenServer.call(via_tuple(id), {:checkout, fun, opts})
+  end
+
+  def config(id) do
+    GenServer.call(via_tuple(id), :config)
   end
 
   def query(id, sql, params, opts) do
@@ -91,6 +99,22 @@ defmodule EctoMultiRepo.Proxy do
   def handle_call(:checked_out?, _from, watchdog) do
     WatchDog.im_alive(watchdog)
     res = ProxyRepo.checked_out?()
+    {:reply, res, watchdog}
+  end
+
+  # checkout
+  @impl GenServer
+  def handle_call({:checkout, fun, opts}, _from, watchdog) do
+    WatchDog.im_alive(watchdog)
+    res = ProxyRepo.checkout(fun, opts)
+    {:reply, res, watchdog}
+  end
+
+  # config
+  @impl GenServer
+  def handle_call(:config, _from, watchdog) do
+    WatchDog.im_alive(watchdog)
+    res = ProxyRepo.config()
     {:reply, res, watchdog}
   end
 

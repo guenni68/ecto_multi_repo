@@ -30,6 +30,10 @@ defmodule EctoMultiRepo do
 
       defdelegate checked_out?(id), to: Proxy
 
+      defdelegate checkout(id, fun, opts \\ []), to: Proxy
+
+      defdelegate config(id), to: Proxy
+
       defdelegate query(
                     id,
                     sql,
