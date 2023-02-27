@@ -14,13 +14,21 @@ defmodule EctoMultiRepo do
                     database,
                     username,
                     password,
-                    pool_size \\ 10,
+                    pool_size \\ 3,
                     timeout \\ :timer.minutes(10)
                   ),
                   to: ProxySupervisor,
                   as: :start_proxy
 
-      defdelegate query(id, sql, params \\ [], opts \\ []), to: Proxy
+      defdelegate noop(id), to: Proxy
+
+      defdelegate query(
+                    id,
+                    sql,
+                    params \\ [],
+                    opts \\ []
+                  ),
+                  to: Proxy
     end
   end
 end
