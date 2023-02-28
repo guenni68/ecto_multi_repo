@@ -163,59 +163,123 @@ defmodule EctoMultiRepo.Proxy do
   end
 
   # all
-  def handle_call({:all, queryable, opts}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:all, queryable, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.all(queryable, opts)
-    {:reply, res, watchdog}
+    res = repo_module.all(queryable, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # checked out?
-  def handle_call(:checked_out?, _from, watchdog) do
+  defp running(
+         {:call, from},
+         :checked_out?,
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.checked_out?()
-    {:reply, res, watchdog}
+    res = repo_module.checked_out?()
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # checkout
-  def handle_call({:checkout, fun, opts}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:checkout, fun, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.checkout(fun, opts)
-    {:reply, res, watchdog}
+    res = repo_module.checkout(fun, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # config
-  def handle_call(:config, _from, watchdog) do
+  defp running(
+         {:call, from},
+         :config,
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.config()
-    {:reply, res, watchdog}
+    res = repo_module.config()
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # delete!
-  def handle_call({:delete!, struct, opts}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:delete!, struct, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.delete!(struct, opts)
-    {:reply, res, watchdog}
+    res = repo_module.delete!(struct, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # delete
-  def handle_call({:delete, struct, opts}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:delete, struct, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.delete(struct, opts)
-    {:reply, res, watchdog}
+    res = repo_module.delete(struct, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
-  # delete
-  def handle_call({:delete_all, struct, opts}, _from, watchdog) do
+  # delete_all
+  defp running(
+         {:call, from},
+         {:delete_all, struct, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.delete_all(struct, opts)
-    {:reply, res, watchdog}
+    res = repo_module.delete_all(struct, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # default_options
-  def handle_call({:default_options, operation}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:default_options, operation},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.default_options(operation)
-    {:reply, res, watchdog}
+    res = repo_module.default_options(operation)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # exists?
