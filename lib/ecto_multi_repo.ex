@@ -3,6 +3,8 @@ defmodule EctoMultiRepo do
   Documentation for `EctoMultiRepo`.
   """
 
+  alias EctoMultiRepo.Generator
+
   alias EctoMultiRepo.ProxyRepo.{
     Postgres,
     MySQL,
@@ -14,6 +16,8 @@ defmodule EctoMultiRepo do
       opts
       |> Keyword.get(:database_type)
       |> choose_repo_module()
+
+    delegates = Generator.generate_delegates()
 
     quote do
       alias EctoMultiRepo.{
@@ -43,6 +47,8 @@ defmodule EctoMultiRepo do
           unquote(repo_module)
         )
       end
+
+      unquote(delegates)
     end
   end
 
