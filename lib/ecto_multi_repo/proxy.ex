@@ -5,98 +5,77 @@ defmodule EctoMultiRepo.Proxy do
 
   alias EctoMultiRepo.{
     Watchdog,
-    ProxyRepo,
-    ProcessRegistry,
-    Behaviour
+    ProcessRegistry
   }
-
-  use Behaviour
 
   def start_link(%{id: id} = arg) do
     GenStateMachine.start_link(__MODULE__, arg, name: via_tuple(id))
   end
 
-  @impl Behaviour
   def noop(id) do
     GenStateMachine.cast(id, :noop)
   end
 
-  @impl Behaviour
   def aggregate(id, queryable, aggregate, opts \\ []) do
     GenStateMachine.call(via_tuple(id), {:aggregate, queryable, aggregate, opts})
   end
 
-  @impl Behaviour
   def aggregate(id, queryable, aggregate, field, opts) do
     GenStateMachine.call(via_tuple(id), {:aggregate, queryable, aggregate, field, opts})
   end
 
-  @impl Behaviour
   def all(id, queryable, opts) do
     GenStateMachine.call(via_tuple(id), {:all, queryable, opts})
   end
 
-  @impl Behaviour
   def checked_out?(id) do
     GenStateMachine.call(via_tuple(id), :checked_out?)
   end
 
-  @impl Behaviour
   def checkout(id, fun, opts) do
     GenStateMachine.call(via_tuple(id), {:checkout, fun, opts})
   end
 
-  @impl Behaviour
   def config(id) do
     GenStateMachine.call(via_tuple(id), :config)
   end
 
-  @impl Behaviour
   def delete!(id, struct, opts) do
     GenStateMachine.call(via_tuple(id), {:delete!, struct, opts})
   end
 
-  @impl Behaviour
   def delete(id, struct, opts) do
     GenStateMachine.call(via_tuple(id), {:delete, struct, opts})
   end
 
-  @impl Behaviour
   def delete_all(id, struct, opts) do
     GenStateMachine.call(via_tuple(id), {:delete_all, struct, opts})
   end
 
-  @impl Behaviour
   def default_options(id, operation) do
     GenStateMachine.call(via_tuple(id), {:default_options, operation})
   end
 
-  @impl Behaviour
   def exists?(id, queryable, opts \\ []) do
     GenStateMachine.call(via_tuple(id), {:exists?, queryable, opts})
   end
 
-  @impl Behaviour
   def explain(id, operation, queryable, opts \\ []) do
     GenStateMachine.call(via_tuple(id), {:explain, operation, queryable, opts})
   end
 
-  @impl Behaviour
   def get(conn_ident, queryable, id, opts \\ []) do
     GenStateMachine.call(via_tuple(conn_ident), {:get, queryable, id, opts})
   end
 
-  @impl Behaviour
   def get!(conn_ident, queryable, id, opts \\ []) do
     GenStateMachine.call(via_tuple(conn_ident), {:get!, queryable, id, opts})
   end
 
-  @impl Behaviour
   def get_by(id, queryable, clauses, opts) do
     GenStateMachine.call(via_tuple(id), {:get_by, queryable, clauses, opts})
   end
 
-  #  @impl Behaviour
   def query(id, sql, params, opts) do
     GenStateMachine.call(via_tuple(id), {:query, sql, params, opts})
   end
