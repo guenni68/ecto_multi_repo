@@ -283,38 +283,78 @@ defmodule EctoMultiRepo.Proxy do
   end
 
   # exists?
-  def handle_call({:exists?, queryable, opts}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:exists?, queryable, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.exists?(queryable, opts)
-    {:reply, res, watchdog}
+    res = repo_module.exists?(queryable, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # explain
-  def handle_call({:explain, operation, queryable, opts}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:explain, operation, queryable, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.explain(operation, queryable, opts)
-    {:reply, res, watchdog}
+    res = repo_module.explain(operation, queryable, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # get
-  def handle_call({:get, queryable, id, opts}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:get, queryable, id, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.get(queryable, id, opts)
-    {:reply, res, watchdog}
+    res = repo_module.get(queryable, id, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # get!
-  def handle_call({:get!, queryable, id, opts}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:get!, queryable, id, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.get!(queryable, id, opts)
-    {:reply, res, watchdog}
+    res = repo_module.get!(queryable, id, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # get_by
-  def handle_call({:get_by, queryable, clauses, opts}, _from, watchdog) do
+  defp running(
+         {:call, from},
+         {:get_by, queryable, clauses, opts},
+         %{
+           watchdog: watchdog,
+           repo_module: repo_module
+         }
+       ) do
     Watchdog.im_alive(watchdog)
-    res = ProxyRepo.get_by(queryable, clauses, opts)
-    {:reply, res, watchdog}
+    res = repo_module.get_by(queryable, clauses, opts)
+    actions = [{:reply, from, res}]
+    {:keep_state_and_data, actions}
   end
 
   # query
