@@ -10,6 +10,8 @@ defmodule EctoMultiRepo.Proxy do
   use GenStateMachine, restart: :temporary
   require Generator
 
+  @call_timeout :timer.seconds(15)
+
   def start_link(%{id: id} = arg) do
     GenStateMachine.start_link(__MODULE__, arg, name: via_tuple(id))
   end
@@ -45,4 +47,6 @@ defmodule EctoMultiRepo.Proxy do
 
     {:next_state, :running, %{watchdog: watchdog, repo_module: repo_module}}
   end
+
+  Generator.generate_handle_event_funs()
 end

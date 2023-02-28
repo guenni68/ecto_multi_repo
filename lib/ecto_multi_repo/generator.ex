@@ -93,6 +93,33 @@ defmodule EctoMultiRepo.Generator do
     unquote(functions)
   end
 
+  defmacro generate_handle_event_funs() do
+    get_functions()
+    |> Enum.flat_map(&generate_handle_event_fun/1)
+  end
+
+  defp generate_handle_event_fun({fun_name, arity}) do
+    args = Macro.generate_arguments(arity, nil)
+
+    [
+      quote do
+        alias EctoMultiRepo.Watchdog
+
+        def handle_event(
+              {:call, from},
+              {unquote(fun_name), unquote_splicing(args)},
+              _state,
+              %{watchdog: watchdog, repo_module: repo_module}
+            ) do
+          Watchdog.im_alive(watchdog)
+          res = repo_module.unquote(fun_name)(unquote_splicing(args))
+          actions = [{:reply, from, res}]
+          {:keep_state_and_data, actions}
+        end
+      end
+    ]
+  end
+
   defmacro generate_api_calls() do
     get_functions()
     |> Enum.flat_map(&generate_api_call/1)
@@ -111,7 +138,11 @@ defmodule EctoMultiRepo.Generator do
     [
       quote do
         def unquote(fun_name)(id, unquote_splicing(args)) do
-          GenStateMachine.call(via_tuple(id), {unquote(fun_name), unquote_splicing(args)})
+          GenStateMachine.call(
+            via_tuple(id),
+            {unquote(fun_name), unquote_splicing(args)},
+            @call_timeout
+          )
         end
       end
     ]
