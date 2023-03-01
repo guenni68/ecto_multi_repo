@@ -1,6 +1,8 @@
 defmodule EctoMultiRepo.Generator do
   @moduledoc false
 
+  alias EctoMultiRepo.Watchdog
+
   functions = [
     aggregate: 2,
     aggregate: 3,
@@ -139,8 +141,6 @@ defmodule EctoMultiRepo.Generator do
       fun_name in get_bang_functions() ->
         [
           quote do
-            alias EctoMultiRepo.Watchdog
-
             def handle_event(
                   {:call, from},
                   {unquote(fun_name), unquote_splicing(args)},
@@ -166,8 +166,6 @@ defmodule EctoMultiRepo.Generator do
       true ->
         [
           quote do
-            alias EctoMultiRepo.Watchdog
-
             def handle_event(
                   {:call, from},
                   {unquote(fun_name), unquote_splicing(args)},
