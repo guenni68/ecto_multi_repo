@@ -5,11 +5,16 @@ defmodule EctoMultiRepo.Application do
 
   use Application
 
+  alias EctoMultiRepo.{
+    ProcessRegistry,
+    ProxySupervisor
+  }
+
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: EctoMultiRepo.Worker.start_link(arg)
-      # {EctoMultiRepo.Worker, arg}
+      ProcessRegistry,
+      ProxySupervisor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
