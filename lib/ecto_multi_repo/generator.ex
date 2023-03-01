@@ -221,4 +221,23 @@ defmodule EctoMultiRepo.Generator do
         ]
     end
   end
+
+  def create_args(min, max, default_value \\ []) do
+    args = Macro.generate_arguments(max, nil)
+
+    default_args =
+      args
+      |> Enum.with_index(1)
+      |> Enum.map(fn {arg, idx} ->
+        if idx <= min do
+          arg
+        else
+          quote do
+            unquote(arg) \\ unquote(default_value)
+          end
+        end
+      end)
+
+    {default_args, args}
+  end
 end
