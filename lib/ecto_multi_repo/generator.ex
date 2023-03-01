@@ -106,22 +106,25 @@ defmodule EctoMultiRepo.Generator do
     unquote(bang_funs)
   end
 
+  # delegates
   def generate_delegates() do
     get_functions()
+    |> group_functions()
     |> Enum.flat_map(&generate_delegate/1)
   end
 
-  defp generate_delegate({fun_name, arity}) do
-    args = Macro.generate_arguments(arity, nil)
+  defp generate_delegate({fun_name, %{min: min, max: max}}) do
+    {default, _args} = create_args(min, max)
 
     [
       quote do
         alias EctoMultiRepo.Proxy
-        defdelegate unquote(fun_name)(id, unquote_splicing(args)), to: Proxy
+        defdelegate unquote(fun_name)(id, unquote_splicing(default)), to: Proxy
       end
     ]
   end
 
+  # handle event functions
   defmacro generate_handle_event_funs() do
     get_functions()
     |> Enum.flat_map(&generate_handle_event_fun/1)
@@ -179,6 +182,7 @@ defmodule EctoMultiRepo.Generator do
     end
   end
 
+  # api calls
   defmacro generate_api_calls() do
     get_functions()
     |> Enum.flat_map(&generate_api_call/1)
@@ -222,6 +226,7 @@ defmodule EctoMultiRepo.Generator do
     end
   end
 
+  # utilities
   def create_args(min, max, default_value \\ [])
 
   def create_args(n, n, _default_value) do
