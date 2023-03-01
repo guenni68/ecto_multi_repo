@@ -191,13 +191,13 @@ defmodule EctoMultiRepo.Generator do
   end
 
   defp generate_api_call({fun_name, %{min: min, max: max}}) do
-    {default, args} = create_args(min, max)
+    {_default, args} = create_args(min, max)
 
     cond do
       fun_name in get_bang_functions() ->
         [
           quote do
-            def unquote(fun_name)(id, unquote_splicing(default)) do
+            def unquote(fun_name)(id, unquote_splicing(args)) do
               case GenStateMachine.call(
                      via_tuple(id),
                      {unquote(fun_name), unquote_splicing(args)},
@@ -216,7 +216,7 @@ defmodule EctoMultiRepo.Generator do
       true ->
         [
           quote do
-            def unquote(fun_name)(id, unquote_splicing(default)) do
+            def unquote(fun_name)(id, unquote_splicing(args)) do
               GenStateMachine.call(
                 via_tuple(id),
                 {unquote(fun_name), unquote_splicing(args)},
