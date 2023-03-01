@@ -85,18 +85,19 @@ defmodule EctoMultiRepo.Generator do
 
   bang_funs =
     functions
-    |> Enum.flat_map(fn {fun_name, _arity} = arg ->
+    |> Enum.flat_map(fn {fun_name, _arity} ->
       ends_with_bang =
         fun_name
         |> Atom.to_string()
         |> String.ends_with?("!")
 
       if ends_with_bang do
-        [arg]
+        [fun_name]
       else
         []
       end
     end)
+    |> Enum.uniq()
 
   def get_functions() do
     unquote(functions)
@@ -134,7 +135,7 @@ defmodule EctoMultiRepo.Generator do
     args = Macro.generate_arguments(arity, nil)
 
     cond do
-      arg in get_bang_functions() ->
+      fun_name in get_bang_functions() ->
         [
           quote do
             alias EctoMultiRepo.Watchdog
@@ -185,17 +186,18 @@ defmodule EctoMultiRepo.Generator do
   # api calls
   defmacro generate_api_calls() do
     get_functions()
+    |> group_functions()
     |> Enum.flat_map(&generate_api_call/1)
   end
 
-  defp generate_api_call({fun_name, arity} = arg) do
-    args = Macro.generate_arguments(arity, nil)
+  defp generate_api_call({fun_name, %{min: min, max: max}}) do
+    {default, args} = create_args(min, max)
 
     cond do
-      arg in get_bang_functions() ->
+      fun_name in get_bang_functions() ->
         [
           quote do
-            def unquote(fun_name)(id, unquote_splicing(args)) do
+            def unquote(fun_name)(id, unquote_splicing(default)) do
               case GenStateMachine.call(
                      via_tuple(id),
                      {unquote(fun_name), unquote_splicing(args)},
@@ -214,7 +216,7 @@ defmodule EctoMultiRepo.Generator do
       true ->
         [
           quote do
-            def unquote(fun_name)(id, unquote_splicing(args)) do
+            def unquote(fun_name)(id, unquote_splicing(default)) do
               GenStateMachine.call(
                 via_tuple(id),
                 {unquote(fun_name), unquote_splicing(args)},
