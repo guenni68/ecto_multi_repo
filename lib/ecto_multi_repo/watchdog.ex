@@ -1,7 +1,7 @@
 defmodule EctoMultiRepo.Watchdog do
   @moduledoc false
 
-  def start_watching(timeout) do
+  def start_watching(timeout \\ :timer.minutes(10)) do
     spawn_link(fn -> watch(timeout) end)
   end
 

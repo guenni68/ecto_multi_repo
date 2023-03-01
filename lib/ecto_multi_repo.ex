@@ -23,7 +23,7 @@ defmodule EctoMultiRepo do
 
     call_timeout =
       opts
-      |> Keyword.get(:call_timeout, :timer.seconds(15))
+      |> Keyword.get(:timeout, :timer.seconds(15))
 
     delegates = Generator.generate_delegates(call_timeout)
 
