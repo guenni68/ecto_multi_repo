@@ -1,7 +1,10 @@
 defmodule EctoMultiRepo.Generator do
   @moduledoc false
 
-  alias EctoMultiRepo.Watchdog
+  alias EctoMultiRepo.{
+    Watchdog,
+    Proxy
+  }
 
   functions = [
     aggregate: 2,
@@ -110,18 +113,17 @@ defmodule EctoMultiRepo.Generator do
   end
 
   # delegates
-  def generate_delegates() do
+  def generate_delegates(call_timeout) do
     get_functions()
     |> group_functions()
-    |> Enum.flat_map(&generate_delegate/1)
+    |> Enum.flat_map(&generate_delegate(&1, call_timeout))
   end
 
-  defp generate_delegate({fun_name, %{min: min, max: max}}) do
+  defp generate_delegate({fun_name, %{min: min, max: max}}, _call_timeout) do
     {default, _args} = create_args(min, max)
 
     [
       quote do
-        alias EctoMultiRepo.Proxy
         defdelegate unquote(fun_name)(id, unquote_splicing(default)), to: Proxy
       end
     ]

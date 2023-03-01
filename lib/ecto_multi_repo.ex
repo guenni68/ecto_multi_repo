@@ -17,7 +17,11 @@ defmodule EctoMultiRepo do
       |> Keyword.get(:database_type)
       |> choose_repo_module()
 
-    delegates = Generator.generate_delegates()
+    call_timeout =
+      opts
+      |> Keyword.get(:call_timeout, :timer.seconds(15))
+
+    delegates = Generator.generate_delegates(call_timeout)
 
     quote do
       alias EctoMultiRepo.{
