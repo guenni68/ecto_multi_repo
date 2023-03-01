@@ -222,7 +222,14 @@ defmodule EctoMultiRepo.Generator do
     end
   end
 
-  def create_args(min, max, default_value \\ []) do
+  def create_args(min, max, default_value \\ [])
+
+  def create_args(n, n, _default_value) do
+    args = Macro.generate_arguments(n, nil)
+    {args, args}
+  end
+
+  def create_args(min, max, default_value) do
     args = Macro.generate_arguments(max, nil)
 
     default_args =
@@ -239,5 +246,23 @@ defmodule EctoMultiRepo.Generator do
       end)
 
     {default_args, args}
+  end
+
+  def group_functions(funs \\ get_functions()) do
+    funs
+    |> Enum.group_by(
+      fn {fun_name, _arity} ->
+        fun_name
+      end,
+      fn {_fun_name, arity} ->
+        arity
+      end
+    )
+    |> Enum.map(fn {fun_name, arities} ->
+      min = Enum.min(arities)
+      max = Enum.max(arities)
+      {fun_name, %{min: min, max: max}}
+    end)
+    |> Enum.sort_by(fn {fun_name, _} -> fun_name end)
   end
 end
