@@ -25,6 +25,10 @@ defmodule EctoMultiRepo do
       opts
       |> Keyword.get(:timeout, :timer.seconds(15))
 
+    idle_timeout =
+      opts
+      |> Keyword.get(:idle_timeout, :timer.minutes(10))
+
     delegates = Generator.generate_delegates(call_timeout)
 
     quote do
@@ -46,6 +50,7 @@ defmodule EctoMultiRepo do
           password,
           pool_size,
           unquote(call_timeout),
+          unquote(idle_timeout),
           unquote(repo_module)
         )
       end

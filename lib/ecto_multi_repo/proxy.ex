@@ -34,7 +34,7 @@ defmodule EctoMultiRepo.Proxy do
   @impl GenStateMachine
   def handle_event(
         :internal,
-        %{repo_module: repo_module} = arg,
+        %{repo_module: repo_module, idle_timeout: idle_timeout} = arg,
         :connecting,
         nil
       ) do
@@ -44,7 +44,7 @@ defmodule EctoMultiRepo.Proxy do
       |> Map.put(:name, nil)
       |> Enum.to_list()
 
-    watchdog = Watchdog.start_watching()
+    watchdog = Watchdog.start_watching(idle_timeout)
     {:ok, repo} = repo_module.start_link(params)
     repo_module.put_dynamic_repo(repo)
 

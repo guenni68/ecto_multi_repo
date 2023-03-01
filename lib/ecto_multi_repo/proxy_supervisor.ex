@@ -21,6 +21,7 @@ defmodule EctoMultiRepo.ProxySupervisor do
         password,
         pool_size,
         timeout,
+        idle_timeout,
         repo_module
       ) do
     args = %{
@@ -32,6 +33,7 @@ defmodule EctoMultiRepo.ProxySupervisor do
       password: password,
       pool_size: pool_size,
       timeout: timeout,
+      idle_timeout: idle_timeout,
       repo_module: repo_module
     }
 
