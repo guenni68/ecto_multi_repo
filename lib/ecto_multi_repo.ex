@@ -3,7 +3,11 @@ defmodule EctoMultiRepo do
   Documentation for `EctoMultiRepo`.
   """
 
-  alias EctoMultiRepo.Generator
+  alias EctoMultiRepo.{
+    ProxySupervisor,
+    Proxy,
+    Generator
+  }
 
   alias EctoMultiRepo.ProxyRepo.{
     Postgres,
@@ -24,11 +28,6 @@ defmodule EctoMultiRepo do
     delegates = Generator.generate_delegates(call_timeout)
 
     quote do
-      alias EctoMultiRepo.{
-        ProxySupervisor,
-        Proxy
-      }
-
       def start_repo(
             id \\ UUID.uuid1(),
             hostname,
@@ -36,8 +35,7 @@ defmodule EctoMultiRepo do
             database,
             username,
             password,
-            pool_size \\ 3,
-            timeout \\ :timer.minutes(10)
+            pool_size \\ 3
           ) do
         ProxySupervisor.start_proxy(
           id,
@@ -47,7 +45,7 @@ defmodule EctoMultiRepo do
           username,
           password,
           pool_size,
-          timeout,
+          unquote(call_timeout),
           unquote(repo_module)
         )
       end
@@ -59,7 +57,13 @@ defmodule EctoMultiRepo do
   end
 
   defp choose_repo_module(nil) do
-    raise "Missing option :database_type at use: #{__MODULE__}"
+    raise """
+    Missing option :database_type at use: #{__MODULE__}
+    valid options are:
+      - :postgres
+      - :mysql
+      - :mssql
+    """
   end
 
   defp choose_repo_module(:postgres) do
