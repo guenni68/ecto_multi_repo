@@ -119,12 +119,14 @@ defmodule EctoMultiRepo.Generator do
     |> Enum.flat_map(&generate_delegate(&1, call_timeout))
   end
 
-  defp generate_delegate({fun_name, %{min: min, max: max}}, _call_timeout) do
-    {default, _args} = create_args(min, max)
+  defp generate_delegate({fun_name, %{min: min, max: max}}, call_timeout) do
+    {default, args} = create_args(min, max)
 
     [
       quote do
-        defdelegate unquote(fun_name)(id, unquote_splicing(default)), to: Proxy
+        def unquote(fun_name)(id, unquote_splicing(default)) do
+          Proxy.unquote(fun_name)(id, unquote_splicing(args), unquote(call_timeout))
+        end
       end
     ]
   end
@@ -198,11 +200,11 @@ defmodule EctoMultiRepo.Generator do
       fun_name in get_bang_functions() ->
         [
           quote do
-            def unquote(fun_name)(id, unquote_splicing(args)) do
+            def unquote(fun_name)(id, unquote_splicing(args), timeout) do
               case GenStateMachine.call(
                      via_tuple(id),
                      {unquote(fun_name), unquote_splicing(args)},
-                     @call_timeout
+                     timeout
                    ) do
                 {:ok, res} ->
                   res
@@ -217,11 +219,11 @@ defmodule EctoMultiRepo.Generator do
       true ->
         [
           quote do
-            def unquote(fun_name)(id, unquote_splicing(args)) do
+            def unquote(fun_name)(id, unquote_splicing(args), timeout) do
               GenStateMachine.call(
                 via_tuple(id),
                 {unquote(fun_name), unquote_splicing(args)},
-                @call_timeout
+                timeout
               )
             end
           end
