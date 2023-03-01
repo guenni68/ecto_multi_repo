@@ -16,6 +16,11 @@ defmodule EctoMultiRepo.Proxy do
     GenStateMachine.start_link(__MODULE__, arg, name: via_tuple(id))
   end
 
+  def noop(id) do
+    GenStateMachine.cast(via_tuple(id), :noop)
+  end
+
+  # generated API
   Generator.generate_api_calls()
 
   defp via_tuple(id) do
@@ -48,5 +53,11 @@ defmodule EctoMultiRepo.Proxy do
     {:next_state, :running, %{watchdog: watchdog, repo_module: repo_module}}
   end
 
+  def handle_event(:cast, :noop, _state, %{watchdog: watchdog}) do
+    Watchdog.im_alive(watchdog)
+    :keep_state_and_data
+  end
+
+  # generated handle event functions
   Generator.generate_handle_event_funs()
 end

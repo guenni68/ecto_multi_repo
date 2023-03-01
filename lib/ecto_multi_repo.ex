@@ -48,6 +48,8 @@ defmodule EctoMultiRepo do
         )
       end
 
+      defdelegate noop(id), to: Proxy
+
       unquote(delegates)
     end
   end
