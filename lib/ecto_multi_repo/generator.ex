@@ -128,11 +128,12 @@ defmodule EctoMultiRepo.Generator do
   # handle event functions
   defmacro generate_handle_event_funs() do
     get_functions()
+    |> group_functions()
     |> Enum.flat_map(&generate_handle_event_fun/1)
   end
 
-  defp generate_handle_event_fun({fun_name, arity} = arg) do
-    args = Macro.generate_arguments(arity, nil)
+  defp generate_handle_event_fun({fun_name, %{min: _min, max: max}}) do
+    {args, args} = create_args(max, max)
 
     cond do
       fun_name in get_bang_functions() ->
