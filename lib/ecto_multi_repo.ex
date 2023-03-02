@@ -1,7 +1,9 @@
 defmodule EctoMultiRepo do
-  @moduledoc """
-  Documentation for `EctoMultiRepo`.
-  """
+  @external_resource readme = Path.expand("./README.md")
+  @moduledoc readme
+             |> File.read!()
+             |> String.split("<!-- README START -->")
+             |> Enum.fetch!(1)
 
   alias EctoMultiRepo.{
     ProxySupervisor,

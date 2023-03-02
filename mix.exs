@@ -1,14 +1,27 @@
 defmodule EctoMultiRepo.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+  @source_url "https://github.com/guenni68/dir_cleaner.git"
+
   def project do
     [
       app: :ecto_multi_repo,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      package: package(),
+      description: description(),
+      source_url: @source_url,
+      homepage_url: @source_url,
+      docs: [
+        # The main page in the docs
+        main: "EctoMultiRepo",
+        api_reference: false,
+        extras: ["CHANGELOG.md"]
+      ]
     ]
   end
 
@@ -32,7 +45,22 @@ defmodule EctoMultiRepo.MixProject do
       {:gen_state_machine, "~> 3.0"},
       {:postgrex, "~> 0.16.5"},
       {:myxql, "~> 0.6.3"},
-      {:tds, "~> 2.3"}
+      {:tds, "~> 2.3"},
+      {:ex_doc, "~> 0.29.1", only: :dev, runtime: false}
+    ]
+  end
+
+  defp description() do
+    """
+    EctoMultiRepo is a "batteries included" library that allows you to
+    create ecto repos dynamically at runtime.
+    """
+  end
+
+  defp package() do
+    [
+      licenses: ["Apache-2.0"],
+      links: %{"GitHub" => @source_url}
     ]
   end
 end
