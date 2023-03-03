@@ -64,7 +64,7 @@ password = "secret1"
 dummy1 =
   :cryto.hash(
     :md5,
-    [database_host_name, port, database, username, password]
+    [database_host_name, "#{port}", database, username, password]
   )
   |> Base.encode64()
 
