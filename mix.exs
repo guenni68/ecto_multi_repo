@@ -1,8 +1,8 @@
 defmodule EctoMultiRepo.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
-  @source_url "https://github.com/guenni68/dir_cleaner.git"
+  @version "0.1.1"
+  @source_url "https://github.com/guenni68/ecto_multi_repo.git"
 
   def project do
     [
